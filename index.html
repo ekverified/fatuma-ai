@@ -698,8 +698,53 @@ const TODAY=new Date().toLocaleDateString('en-KE',{weekday:'long',year:'numeric'
 // Users open Fatuma and chat immediately. No prompts, no setup screen.
 const CONN_MODE   = 'backend';
 const BACKEND_URL = 'https://fatuma-backend.onrender.com';
-let API_KEY = '';   // unused when backend mode
-let GH_TOKEN = '';  // unused when backend mode
+let API_KEY  = '';   // unused when backend mode
+let GH_TOKEN = '';   // unused when backend mode
+
+// ── Core state ──
+let hist         = [];       // conversation history
+let loading      = false;    // prevents double-send
+let codeBlocks   = [];       // generated code blocks
+let isRecording  = false;    // voice recording state
+let liveRec      = null;     // SpeechRecognition instance
+
+// ── Speech synthesis (female voice) ──
+let synth = window.speechSynthesis;
+
+// ── Helpers ──
+function rsz(el){
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+function hkey(e){
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendMsg(); }
+}
+function ask(t){ document.getElementById('inp').value = t; sendMsg(); }
+function scrollBot(){ const m = document.getElementById('msgs'); m.scrollTop = m.scrollHeight; }
+function now(){ return new Date().toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'}); }
+function hasCode(t){ return /```[\s\S]*?```/.test(t); }
+function toggleCode(open){ document.getElementById('codePanel').classList.toggle('open', open); }
+function clearCode(){
+  document.getElementById('cpBody').innerHTML = '';
+  const fl = document.getElementById('fileList');
+  fl.innerHTML = '<div style="font-size:.56rem;font-family:'Space Mono',monospace;color:var(--tmut);margin-bottom:6px;letter-spacing:.06em;text-transform:uppercase;">⬇ Download Files</div>';
+  fl.style.display = 'none';
+  codeBlocks = [];
+}
+function qCopy(id){ const b = codeBlocks.find(x=>x.id===id); if(b) navigator.clipboard.writeText(b.code); }
+function openInPanel(id){
+  const b = codeBlocks.find(x=>x.id===id); if(!b) return;
+  navigator.clipboard.writeText(b.code); toggleCode(true); addToPanel(b);
+}
+function showErr(msg){
+  const e = document.createElement('div'); e.className = 'err'; e.textContent = '⚠️ '+msg;
+  document.getElementById('msgs').appendChild(e); scrollBot();
+}
+function addSysMsg(text){
+  const d = document.createElement('div');
+  d.style.cssText = 'text-align:center;font-size:.65rem;font-family:Space Mono,monospace;color:var(--tmut);padding:4px 0;';
+  d.textContent = text; document.getElementById('msgs').appendChild(d); scrollBot();
+}
 
 
 function switchSetupTab(){} // removed — no setup screen

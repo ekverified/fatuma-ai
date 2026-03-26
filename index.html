@@ -502,7 +502,7 @@ function processResponse(text){
   showTyping(counselLabels[counsel?lang:'']||(isCode?'Writing code...':''));
   if(isSearch)showSearch('\uD83D\uDD0D Searching the web...');
   var maxTok=isCode?2000:counsel?900:600;
-  var payload={model:'claude-haiku-3-5-20251001',max_tokens:maxTok,stream:false,system:SYS,messages:trimmedHist()};
+  var payload={model:'gpt-4o-mini',max_tokens:maxTok,stream:false,system:SYS,messages:trimmedHist()};
   if(isSearch)payload.tools=[{type:'web_search_20250305',name:'web_search'}];
 
   // Tag current API for the response
@@ -518,7 +518,14 @@ function processResponse(text){
       hideTyping();hideSearch();
       if(!resp.ok){
         var msg='Server error '+resp.status;
-        try{var j=JSON.parse(bodyText);msg=(j.error&&j.error.message)||msg;}catch(ex){msg=msg+': '+bodyText.substring(0,80);}
+        try{
+          var j=JSON.parse(bodyText);
+          msg=(j.error&&j.error.message)||msg;
+          // Anthropic credit error — guide user clearly
+          if(j.error&&j.error.code==='anthropic_credits'){
+            msg='Anthropic API credits are empty. The system will automatically use OpenAI if OPENAI_API_KEY is set on the server. Ask the admin to add OPENAI_API_KEY in Render dashboard.';
+          }
+        }catch(ex){msg=msg+': '+bodyText.substring(0,80);}
         showErr(msg);hist.pop();finishLoad();return;
       }
       var data;

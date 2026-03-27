@@ -500,10 +500,11 @@ function processResponse(text){
   for(var ci=0;ci<cW.length;ci++){if(text.toLowerCase().indexOf(cW[ci])>=0){isCode=true;break;}}
   var counselLabels={en:'Listening... take your time',sw:'Sikiliza... pole pole',fr:"J'ecoute...",luo:'Winjo...',luh:'Inywa...',kik:'Thikiriria...'};
   showTyping(counselLabels[counsel?lang:'']||(isCode?'Writing code...':''));
-  if(isSearch)showSearch('\uD83D\uDD0D Searching the web...');
+  // Web search tool only available with Anthropic API
   var maxTok=isCode?2000:counsel?900:600;
-  var payload={model:'gpt-4o-mini',max_tokens:maxTok,stream:false,system:SYS,messages:trimmedHist()};
-  if(isSearch)payload.tools=[{type:'web_search_20250305',name:'web_search'}];
+  var payload={model:'llama-3.3-70b-versatile',max_tokens:maxTok,stream:false,system:SYS,messages:trimmedHist()};
+  // Web search only works with Anthropic — skip for other providers
+  // isSearch flag still triggers search-oriented prompting
 
   // Tag current API for the response
   var activeAPI=currentAPI;

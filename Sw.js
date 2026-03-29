@@ -1,5 +1,5 @@
-const CACHE='fatuma-v4';
-const ASSETS=['/','/index.html','/style.css','/manifest.json'];
+const CACHE='fatuma-v5';
+const ASSETS=['/','index.html','style.css','manifest.json'];
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()));
 });
@@ -8,8 +8,8 @@ self.addEventListener('activate',e=>{
 });
 self.addEventListener('fetch',e=>{
   const u=e.request.url;
-  if(u.includes('/api/')||u.includes('groq')||u.includes('googleapis')||u.includes('mistral')||u.includes('openrouter')||u.includes('together')||u.includes('gnews')||u.includes('newsapi')){
-    e.respondWith(fetch(e.request).catch(()=>new Response('{"error":{"message":"Offline — hakuna mtandao."}}',{headers:{'Content-Type':'application/json'}})));
+  if(u.includes('/api/')||u.includes('groq')||u.includes('googleapis')||u.includes('mistral')||u.includes('openrouter')||u.includes('together')){
+    e.respondWith(fetch(e.request).catch(()=>new Response('{"error":{"message":"Offline."}}',{headers:{'Content-Type':'application/json'}})));
     return;
   }
   e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{

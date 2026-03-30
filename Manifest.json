@@ -1,17 +1,67 @@
 {
-  "name":"Fatuma AI",
-  "short_name":"Fatuma",
-  "description":"Your Kenyan AI companion — live news, counselling, friendship.",
-  "start_url":"/",
-  "scope":"/",
-  "display":"standalone",
-  "background_color":"#07090a",
-  "theme_color":"#d4a84b",
-  "orientation":"portrait-primary",
-  "lang":"en-KE",
-  "icons":[
-    {"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
-    {"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  "name": "Fatuma AI",
+  "short_name": "Fatuma",
+  "description": "Your Kenyan AI companion — live news, counselling, code, friendship.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "background_color": "#07090a",
+  "theme_color": "#d4a84b",
+  "orientation": "portrait-primary",
+  "lang": "en-KE",
+  "dir": "ltr",
+  "categories": ["productivity", "lifestyle", "education", "social"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ],
-  "categories":["productivity","lifestyle","education","social"]
+  "screenshots": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Fatuma AI chat interface"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Kenya News",
+      "short_name": "News",
+      "description": "Get latest Kenya news",
+      "url": "/?tab=kenya",
+      "icons": [{"src": "/icon-192.png", "sizes": "192x192"}]
+    },
+    {
+      "name": "Talk to Fatuma",
+      "short_name": "Chat",
+      "description": "Start a conversation",
+      "url": "/?tab=chat",
+      "icons": [{"src": "/icon-192.png", "sizes": "192x192"}]
+    }
+  ]
 }

@@ -1,7 +1,7 @@
 {
   "name": "Fatuma AI",
   "short_name": "Fatuma",
-  "description": "Your Kenyan AI companion — live news, counselling, code, friendship.",
+  "description": "Your Kenyan friend and counsellor. Always here to listen, talk, and support you.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -11,7 +11,7 @@
   "orientation": "portrait-primary",
   "lang": "en-KE",
   "dir": "ltr",
-  "categories": ["productivity", "lifestyle", "education", "social"],
+  "categories": ["lifestyle", "social", "health"],
   "prefer_related_applications": false,
   "icons": [
     {
@@ -39,28 +39,12 @@
       "purpose": "maskable"
     }
   ],
-  "screenshots": [
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Fatuma AI chat interface"
-    }
-  ],
   "shortcuts": [
-    {
-      "name": "Kenya News",
-      "short_name": "News",
-      "description": "Get latest Kenya news",
-      "url": "/?tab=kenya",
-      "icons": [{"src": "/icon-192.png", "sizes": "192x192"}]
-    },
     {
       "name": "Talk to Fatuma",
       "short_name": "Chat",
-      "description": "Start a conversation",
-      "url": "/?tab=chat",
+      "description": "Open chat with your friend",
+      "url": "/",
       "icons": [{"src": "/icon-192.png", "sizes": "192x192"}]
     }
   ]

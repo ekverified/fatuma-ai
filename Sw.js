@@ -1,14 +1,15 @@
 /**
- * FATUMA AI — Service Worker v7
- * Enables: offline support, background sync, push notifications, install prompt
- * Strategy: Cache-first for assets, Network-first for API calls
+ * FATUMA AI — Service Worker v8
+ * Pure Friend & Counsellor Mode
+ * Enables: Offline support, caching, install prompt
+ * Strategy: Cache-first for static assets, Network-first for API
  */
 
-const SW_VERSION = 'fatuma-v7';
+const SW_VERSION = 'fatuma-v8';
 const STATIC_CACHE = `${SW_VERSION}-static`;
 const DYNAMIC_CACHE = `${SW_VERSION}-dynamic`;
 
-// Files to cache immediately on install (app shell)
+// Files to cache immediately (App Shell)
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -16,10 +17,9 @@ const PRECACHE_ASSETS = [
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
-  // Google Fonts fallback — cached after first load
 ];
 
-// URLs that should NEVER be cached (always network)
+// Never cache these (always go to network)
 const NETWORK_ONLY = [
   'fatuma-backend.onrender.com',
   'api.groq.com',
@@ -31,42 +31,34 @@ const NETWORK_ONLY = [
   'api.openai.com',
 ];
 
-// ── Install: pre-cache app shell ──────────────────────────────
+// ── Install: Pre-cache app shell ──────────────────────────────
 self.addEventListener('install', event => {
   console.log('[SW] Installing', SW_VERSION);
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then(cache => {
-        console.log('[SW] Pre-caching app shell');
-        // Use individual adds so one failure doesn't break all
+        console.log('[SW] Pre-caching app shell...');
         return Promise.allSettled(
           PRECACHE_ASSETS.map(url => 
-            cache.add(url).catch(err => console.warn('[SW] Pre-cache failed:', url, err))
+            cache.add(url).catch(err => console.warn('[SW] Failed to cache:', url, err))
           )
         );
       })
-      .then(() => {
-        console.log('[SW] Pre-cache complete');
-        return self.skipWaiting(); // Activate immediately
-      })
+      .then(() => self.skipWaiting())
   );
 });
 
-// ── Activate: clean old caches ────────────────────────────────
+// ── Activate: Clean old caches ────────────────────────────────
 self.addEventListener('activate', event => {
   console.log('[SW] Activating', SW_VERSION);
   event.waitUntil(
     caches.keys()
       .then(keys => {
         const toDelete = keys.filter(k => k !== STATIC_CACHE && k !== DYNAMIC_CACHE);
-        return Promise.all(toDelete.map(k => {
-          console.log('[SW] Deleting old cache:', k);
-          return caches.delete(k);
-        }));
+        return Promise.all(toDelete.map(k => caches.delete(k)));
       })
-      .then(() => self.clients.claim()) // Take control immediately
+      .then(() => self.clients.claim())
       .then(() => {
-        // Notify all clients that SW is ready
         return self.clients.matchAll({ includeUncontrolled: true });
       })
       .then(clients => {
@@ -75,23 +67,19 @@ self.addEventListener('activate', event => {
   );
 });
 
-// ── Fetch: smart routing ──────────────────────────────────────
+// ── Fetch: Smart routing ──────────────────────────────────────
 self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests
-  if (request.method !== 'GET') return;
+  if (request.method !== 'GET' || !url.protocol.startsWith('http')) return;
 
-  // Skip chrome-extension and non-http(s)
-  if (!url.protocol.startsWith('http')) return;
-
-  // Network-only: API calls (never cache AI/news responses)
+  // Always network for API calls (chat backend)
   if (NETWORK_ONLY.some(domain => url.hostname.includes(domain) || url.pathname.includes('/api/'))) {
     event.respondWith(
       fetch(request).catch(() => 
         new Response(
-          JSON.stringify({ error: { message: 'You are offline. Please check your connection and try again.' } }),
+          JSON.stringify({ error: { message: "You are offline. Please check your connection." } }),
           { status: 503, headers: { 'Content-Type': 'application/json' } }
         )
       )
@@ -99,32 +87,29 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Cache-first for same-origin static assets (HTML, CSS, JS, images)
+  // Cache-first for static assets (same origin)
   if (url.origin === self.location.origin) {
     event.respondWith(
       caches.match(request)
         .then(cached => {
           if (cached) {
-            // Return cached, also update in background (stale-while-revalidate)
-            const fetchPromise = fetch(request)
-              .then(networkResp => {
-                if (networkResp.ok) {
-                  caches.open(STATIC_CACHE).then(c => c.put(request, networkResp.clone()));
-                }
-                return networkResp;
-              })
-              .catch(() => {}); // Silent fail on background update
+            // Stale-while-revalidate
+            fetch(request).then(networkResp => {
+              if (networkResp && networkResp.ok) {
+                caches.open(STATIC_CACHE).then(c => c.put(request, networkResp.clone()));
+              }
+            }).catch(() => {});
             return cached;
           }
-          // Not in cache — fetch and cache
+
           return fetch(request).then(networkResp => {
-            if (networkResp.ok) {
+            if (networkResp && networkResp.ok) {
               const clone = networkResp.clone();
               caches.open(STATIC_CACHE).then(c => c.put(request, clone));
             }
             return networkResp;
           }).catch(() => {
-            // Offline fallback
+            // Offline fallback for HTML
             if (request.destination === 'document') {
               return caches.match('/index.html');
             }
@@ -134,7 +119,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Network-first for external resources (fonts, CDN etc.)
+  // Network-first for external resources (fonts, etc.)
   event.respondWith(
     fetch(request)
       .then(resp => {
@@ -156,34 +141,6 @@ self.addEventListener('message', event => {
   if (event.data?.type === 'GET_VERSION') {
     event.ports[0]?.postMessage({ version: SW_VERSION });
   }
-});
-
-// ── Background sync (for offline message queue) ───────────────
-self.addEventListener('sync', event => {
-  console.log('[SW] Background sync:', event.tag);
-  // Future: sync queued messages when back online
-});
-
-// ── Push notifications (future) ───────────────────────────────
-self.addEventListener('push', event => {
-  if (!event.data) return;
-  const data = event.data.json();
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'Fatuma AI', {
-      body: data.body || 'You have a new message',
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
-      vibrate: [200, 100, 200],
-      data: { url: data.url || '/' },
-    })
-  );
-});
-
-self.addEventListener('notificationclick', event => {
-  event.notification.close();
-  event.waitUntil(
-    clients.openWindow(event.notification.data?.url || '/')
-  );
 });
 
 console.log('[SW] Service Worker loaded:', SW_VERSION);
